@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Audit"
+  short_description: "Audit codebases for exploitable security flaws"
+  default_prompt: "Use $security-audit to threat-model and audit this project for exploitable security vulnerabilities."

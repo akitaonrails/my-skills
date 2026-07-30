@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Post-Audit"
+  short_description: "Audit merged changes before deploy or release"
+  default_prompt: "Use $pr-post-audit to audit the combined merged state before deployment or release."

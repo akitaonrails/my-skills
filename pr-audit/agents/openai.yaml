@@ -1,0 +1,4 @@
+interface:
+  display_name: "PR Audit"
+  short_description: "Audit PRs before evidence-based safe merges"
+  default_prompt: "Use $pr-audit to audit this pull request and recommend whether it is safe to merge."

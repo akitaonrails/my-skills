@@ -1,0 +1,4 @@
+interface:
+  display_name: "Issue Audit"
+  short_description: "Verify issue claims and plan safe resolutions"
+  default_prompt: "Use $iss-audit to verify this issue and recommend a clean evidence-based resolution."
