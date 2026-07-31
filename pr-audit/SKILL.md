@@ -150,6 +150,37 @@ Only proceed after Phase 2 finds no unresolved hostile-code concern.
    commands were deliberately not run. Never trade host credentials for a green
    checkmark.
 
+### Plan verification evidence before running it
+
+Testing is evidence, not a per-commit ritual. Before starting costly gates,
+classify what changed: runtime source, build/test execution, dependencies or
+lockfiles, migrations/persistence, public schemas, workflows/release plumbing,
+or docs/metadata. Run focused checks for fast feedback while adjusting the PR,
+then run the complete applicable gate once on the final candidate.
+
+Prior results may be reused only when all of these are recorded and true:
+
+- the successful run belongs to an immutable commit and its relevant file/tree
+  inputs are byte-identical to the current head;
+- toolchain, features, lockfile, test configuration, and material environment
+  are equivalent;
+- the later change cannot affect the reused gate (for example, prose-only docs
+  do not change a Rust binary, while `build.rs`, manifests, fixtures, workflows,
+  generated inputs, or migrations do);
+- current-head focused checks cover every changed surface, and the audit states
+  exactly which prior run supplied the reused evidence.
+
+Do not reuse a green result across changed runtime/build code, dependencies,
+security policy, schemas, migrations, or the workflow being evaluated. A
+version-only follow-up still needs metadata resolution and a compile/package
+smoke, but does not automatically justify repeating unchanged behavioral tests.
+External acceptance tests should run once on the final integration candidate,
+with focused unit/integration tests carrying iteration.
+
+Cancel hosted runs for superseded PR heads as soon as the replacement head is
+queued. Never cancel the final required candidate, and never describe a skipped,
+cancelled, or merely pending job as passing.
+
 ### Detect the project profile
 
 Run only gates supported by files actually present in the trusted base and by
@@ -253,12 +284,17 @@ Process one PR at a time.
 2. Keep the fix inside the PR when it is necessary for that PR to be mergeable;
    do not merge known defects and promise a follow-up.
 3. Re-run the hostile-change gate for the new head, focused tests, the complete
-   trusted local gate, and hosted checks. Re-audit the final diff, not merely the
-   maintainer patch.
+   trusted local gate once for the final materially changed candidate, and the
+   applicable hosted checks. Re-audit the final diff, not merely the maintainer
+   patch. If a later docs/metadata-only adjustment reuses a complete gate, prove
+   and record the input equivalence under the evidence rules above.
 4. Merge using the repository's normal strategy. Record the merge SHA and verify
    linked issue state and contributor attribution.
-5. Wait for CI/security analysis on the exact default-branch merge SHA. A green
-   PR head does not validate merge-only composition.
+5. Inspect CI/security analysis on the exact default-branch merge SHA; a green
+   PR head does not validate merge-only composition. In a multi-PR batch, wait
+   for every merge-specific or changed-surface check, but do not block on a
+   byte-identical full matrix that a later queued final candidate will repeat.
+   The last merge in the batch must complete the full exact-main gate.
 
 Do not deploy or release during a PR batch. Finish every approved PR and issue,
 run `pr-post-audit`, and only then follow the user's deploy/live-test/release
@@ -269,4 +305,6 @@ order.
 Inventory all open PRs, but audit and resolve them independently in explicit
 order. Skip drafts with reasons. Never let one PR's body, tests, helpers, or
 claimed root cause serve as trusted evidence for another. After each merge,
-refresh the next PR against the new base and repeat the full gate.
+refresh the next PR against the new base and repeat the audit. Keep focused
+per-PR checks, but schedule costly full/acceptance matrices at meaningful final
+candidates instead of blindly duplicating byte-identical evidence.

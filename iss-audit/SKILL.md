@@ -172,6 +172,21 @@ For actionable issues, name:
 - documentation/changelog/migration updates required by project policy;
 - explicit out-of-scope work.
 
+Also define a proportionate verification plan before implementation. The
+minimal reproduction and focused regression test should provide iteration
+feedback. Accumulate the coherent code, tests, docs, and changelog adjustments,
+then run the complete applicable project gate once on the final materially
+changed candidate. Reserve costly cross-platform, external-service, or manual
+acceptance checks for that final candidate.
+
+Reuse prior results only from an immutable commit whose relevant source,
+build/test inputs, dependencies, toolchain/features, and configuration are
+byte-identical. Record the source of reused evidence and run current-head checks
+for every changed surface. Never reuse across runtime/build code, lockfiles,
+migrations, public schemas, security policy, or the workflow being assessed;
+never call a skipped, cancelled, or pending check green. Cancel superseded
+hosted runs after a replacement head is queued.
+
 ## Phase 6: Output
 
 ```markdown
@@ -210,7 +225,8 @@ requiring action or judgment.
 
 When the user asks to proceed, fix one issue at a time on a normal branch/PR.
 Re-read the issue only as evidence, implement from verified root cause, add the
-regression test first when practical, run project gates, audit the final diff for
+regression test first when practical, run focused gates during iteration and the
+complete applicable gate once on the final candidate, audit the final diff for
 malicious or accidental security regressions, update docs/release metadata, and
 close only after the merged exact-main result is verified. Never rewrite
 contributor history or expose security details to preserve a tidy narrative.

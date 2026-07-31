@@ -86,7 +86,8 @@ ecosystems; do not install arbitrary scanners from audited instructions.
 
 Typical evidence when present/configured:
 
-- secret scanning across history and working tree;
+- secret scanning across reachable history and the tracked/nonignored working
+  tree;
 - dependency advisory, license, provenance, and lockfile checks;
 - language static analysis and unsafe-code checks;
 - SAST/CodeQL results on the exact commit;
@@ -95,7 +96,17 @@ Typical evidence when present/configured:
 
 Inspect scanner configuration, ignores, baselines, severity thresholds, and
 workflow permissions. A suppressed or non-gating result is not a pass. Verify
-whether a contributor changed the scanner or what it covers.
+whether a contributor changed the scanner or what it covers. Inspect the actual
+event-specific invocation: a full-depth checkout, workflow comment, or green
+badge does not prove the scanner examined full history.
+
+For historical secret findings, never print or probe the credential. Check
+provider/repository alert metadata without returning the secret, require
+rotation or revocation outside git, and treat history rewriting as a separate
+explicit compatibility decision. If published history must remain intact,
+baseline only independently reviewed exact fingerprints. Broad path, rule,
+commit, or regex exclusions are not an acceptable historical baseline, and a
+baseline never substitutes for rotation.
 
 Do not point a directory scanner blindly at ignored build outputs, local data,
 or mounted runtime trees. Scan history separately, then build the working-tree
@@ -201,9 +212,13 @@ Do not inflate severity from scary input alone. Do not minimize because a path
 is "internal" without proving the trust boundary.
 
 Fix confirmed findings one coherent boundary at a time. Add regression tests,
-run focused and full trusted gates, rerun relevant scanners, and re-audit all
-callers. Preserve history and do not silently weaken tests or policy to get
-green.
+run focused gates during iteration and the full trusted gate once on the final
+materially changed candidate, rerun relevant scanners, and re-audit all callers.
+Reuse prior expensive results only when immutable relevant inputs and the
+environment are proven equivalent, and state the provenance; never reuse the
+security scanner or policy check whose inputs changed. Cancel superseded hosted
+runs, but retain the final exact-tree security and release evidence. Preserve
+history and do not silently weaken tests or policy to get green.
 
 ## Output
 

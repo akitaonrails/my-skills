@@ -168,18 +168,38 @@ secret-free disposable environment for untrusted batch code. Builds and tests
 can execute compiler plugins, lifecycle scripts, test discovery, migrations,
 and shell hooks.
 
+Build an evidence ledger before launching costly work. For every gate, record
+the immutable commit, relevant tree/file hashes, toolchain/features/config, and
+whether the result is new or reused. Reuse is valid only for byte-identical
+inputs and an equivalent environment; prose-only or release-metadata follow-ups
+may reuse behavioral tests, but changes to runtime/build code, dependencies,
+lockfiles, fixtures, migrations, schemas, security policy, or the workflow under
+test may not. State reused evidence explicitly instead of calling an unrun gate
+green.
+
+Use focused checks while fixing individual findings, then run the complete
+applicable local/integration gate once after all material changes are
+accumulated. Run expensive external/manual acceptance once on the final
+candidate. Cancel superseded intermediate PR/push workflows when a later queued
+candidate strictly contains the same inputs; keep the final exact-main release
+gate and any unique platform/security job.
+
 Verification must include:
 
 - format/static analysis/lint/typecheck as configured;
-- complete tests plus focused high-risk regression tests;
+- complete tests on the final materially changed candidate plus focused
+  high-risk regression tests during iteration;
 - dependency/advisory/license policy tools configured by the repo;
 - package/release builds for supported platforms where available;
 - generated artifacts/docs/schema drift checks;
 - hosted CI and security analysis on the exact `HEAD_SHA`, including non-gating
   platforms relevant to the batch.
 
-Do not treat a PR-head run as the exact-main result. If checks run after a merge,
-wait for the merge SHA's workflows.
+Do not treat a PR-head run as the exact-main result. It may support explicitly
+unchanged component evidence, but final-tree workflow/security/composition
+checks must run on the merge SHA. Wait for the final required exact-main jobs;
+do not wait twice for an explicitly non-gating, input-identical job when its
+result is already recorded and a later final gate will cover it.
 
 ## Phase 7: Fix Loop
 
