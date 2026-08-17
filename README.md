@@ -14,7 +14,7 @@ Flat: one directory per skill, each with a `SKILL.md`.
 | --- | --- | --- |
 | Claude Code | `~/.claude/skills` | per-skill symlinks |
 | Codex | `~/.codex/skills` | per-skill symlinks |
-| opencode | `~/.config/opencode/skills` | symlink → `~/.claude/skills` |
+| opencode | `~/.config/opencode/skills` | real dir: per-skill symlinks + opencode-only entries |
 | opencode (checkout) | `~/opencode/.opencode/skills` | per-skill symlinks |
 | Kimi | `~/.kimi-code/skills` | whole-dir symlink → this repo |
 | shared | `~/.agents/skills` | per-skill symlinks |
@@ -29,7 +29,10 @@ symlink: the harness directories also hold entries that must **not** live here
 - **`omarchy`, `diagnose-crash`** — package-owned, symlinked from
   `/usr/share/omarchy/default/agents/skills/`. Owned by the omarchy package and
   replaced on update.
-- **`oh-my-opencode-slim`** — plugin-managed, registered in `~/.claude.json`.
+- **`oh-my-opencode-slim`** — opencode-only: the plugin (registered in
+  `~/.claude.json` telemetry aside, it runs solely inside opencode) and its
+  config skill live in `~/.config/opencode/skills/` as a real directory, not
+  shared through `~/.claude/skills`.
 - **`assess-team`, `assess-partners`** — their own git repos, hosted on a
   private remote. **This repo is public**; assessment methodology, templates
   and reports must not be published here. The seven `assess-*` skills are
