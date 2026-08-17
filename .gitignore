@@ -1,0 +1,15 @@
+# Virtualenvs and caches — never belong in a skills repo
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ai-jail/
+
+# Large binaries. Assessment PDFs/reports must NOT be committed here:
+# this repo is public, and assessment work lives on the private homelab remote.
+*.pdf
+*.zip
+*.tar.gz
+*.png
+*.jpg
+*.jpeg

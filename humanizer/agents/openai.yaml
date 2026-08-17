@@ -1,0 +1,4 @@
+interface:
+  display_name: "Humanizer"
+  short_description: "Remove AI writing patterns from prose"
+  default_prompt: "Use $humanizer to make this text sound natural while preserving its meaning and facts."
