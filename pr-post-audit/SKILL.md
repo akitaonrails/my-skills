@@ -85,6 +85,13 @@ Check especially for corrections commonly missed before merge:
 - contributor tests tied to a real home, platform, time, service, or mutable
   external state;
 - one platform/front door fixed while its parallel implementation stayed stale;
+- code that only the development platform's gate exercises, hiding a
+  platform-specific defect: path identity that assumes one canonical spelling
+  (symlinked temp/home roots, drive-letter vs POSIX, trailing separators),
+  file-locking and stderr/exit-code semantics that differ across OSes, line
+  endings, and case sensitivity. These pass a single-platform fast gate and
+  fail only on the full matrix — flag them for the release candidate's
+  cross-platform run rather than trusting the merge gate;
 - release notes present but README support tables, architecture/config docs,
   migration notes, or examples still describing the old behavior.
 
@@ -155,6 +162,27 @@ Apply changelog/release-note rules only when the trusted project instructions
 require them. Verify the correct unreleased/release section, category, issue/PR
 references, tense, dates, compare links, and semantic-version recommendation.
 Test-only/internal changes may be exempt only under project policy.
+
+Two changelog hazards recur and neither is caught by a section-heading
+uniqueness check, so look for them directly:
+
+- **Entries stranded in a frozen released section.** A PR authored before a
+  release was cut anchors its entry at the old "Unreleased" position; merging
+  the mainline back into that branch can resolve *cleanly with no conflict*
+  and drop the entry inside the now-frozen released section — claiming a
+  change shipped in a version that never contained it. Confirm each new
+  entry sits under the pending/unreleased heading, not a released one.
+- **Leftover merge-resolution debris.** Scripted conflict resolution can
+  leave diff3 base markers (`|||||||`) and duplicated entries in the file.
+  Run the repo's whitespace/conflict check (e.g. `git diff --check`, which
+  flags leftover conflict markers) over the changelog — a heading-uniqueness
+  script alone will pass a file full of duplicated bullets and stray markers.
+
+**Recommend the version from the diff, not the PR prose.** The pending
+changelog section is the honest signal: fixes-only → patch; any additive
+surface → minor; any break (on-disk format, public API/CLI/wire contract,
+removed surface) → major. State the recommendation and the single highest-
+impact entry that forces it.
 
 ## Phase 6: Conditional Verification
 
@@ -245,3 +273,13 @@ Then follow the user's requested order: deploy the exact audited commit, live
 test production behavior and rollback/health signals, and only afterward create
 and push the release tag. Verify the complete publication workflow and local
 installation/wrapper when requested.
+
+Before tagging, the release candidate's **full cross-platform / cross-target
+matrix must be green on that exact SHA** — not only the fast subset a merge
+gates on. This is where platform-specific defects that no single-platform
+gate can see actually surface; treat a red matrix as a real finding, fix it,
+and re-cut the candidate rather than tagging around it. Recommend the version
+number from the pending changelog's impact (patch/minor/major), and remember
+that landing-and-pushing fixes is not the same request as cutting a release:
+tag, bump, and deploy only when the user asks, and a fix batch can ship as a
+patch ahead of unreleased feature work rather than waiting for it.

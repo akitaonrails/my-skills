@@ -120,10 +120,50 @@ Before commit/push of the final candidate:
    are iteration evidence; the full gate is the release evidence.
 3. For batches over 3 tickets: `pr-post-audit` over the whole range must be
   clean before pushing (see Batch Rule).
-4. Push, then verify hosted CI on the exact pushed SHA — wait for the
+4. Run the gate in its own step and READ its result before merging or
+   pushing. Never chain a gate with the merge/push that depends on it in one
+   command (`gate && merge && push`, or a `;`-sequence): a non-zero gate that
+   the shell runs past has repeatedly pushed a broken tree. Gate, read exit
+   codes explicitly, then merge/push as a separate action.
+5. Push, then verify hosted CI on the exact pushed SHA — wait for the
    relevant jobs; never report a pending/skipped job as passing.
-5. Only after CI is green: deploy/release if the user asked for it (and per
+6. Only after CI is green: deploy/release if the user asked for it (and per
    pr-audit policy, deployment waits until the whole batch is resolved).
+   A release-bound candidate additionally needs its full cross-platform /
+   cross-target matrix green on that exact SHA before tagging (see
+   pr-post-audit) — a mainline gated only on the fast subset is not proven
+   for release.
+
+## Release Sequencing and Semver
+
+Landing a fix and shipping it are separate decisions. Resolve tickets onto
+the mainline; let the version strategy decide when a release cuts and which
+number it carries. Follow the project's own policy where it states one; where
+it does not, this is a safe default.
+
+- **Classify every resolved ticket by release impact**, using the project's
+  own changelog/section conventions as the signal: a bug fix is a patch, an
+  additive capability (a new option, provider, integration, endpoint) is a
+  minor, and anything that breaks an on-disk format, a public API/CLI/wire
+  contract, or removes a surface is a major. When the project keeps an
+  "Unreleased"/pending changelog section, the headings already encode this —
+  fixes-only means a patch is due; any additive entry raises it to a minor;
+  any breaking entry to a major.
+- **Do not hold a fix hostage to unreleased feature work.** If the mainline
+  already carries unreleased additive/breaking changes and an urgent fix
+  lands, the fix can still ship as a patch: cut a maintenance branch from the
+  last release tag, cherry-pick the fix (which lands on the mainline first,
+  always), tag the patch from that branch, then let the branch go dormant.
+  Prefer this narrow backport to standing long-lived release branches — a
+  single mainline plus tags is less to keep coherent, and the release
+  pipeline is usually tag-driven regardless.
+- **Batch by impact, not by arrival.** Grouping a run's tickets into a
+  patch set and a feature set (rather than one mixed release) keeps fixes
+  fast and features deliberate, and keeps the version number honest.
+- **Accumulating vs. releasing are distinct asks.** "Resolve and push" means
+  the fixes reach the mainline and hosted CI is green; it does not authorize
+  a tag, a version bump, or a deploy. Cutting the release is a separate,
+  explicit step — do not bundle it in unless the user asked for it.
 
 ## Attribution
 

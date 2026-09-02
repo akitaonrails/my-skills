@@ -225,6 +225,13 @@ Review the full diff plus affected surrounding code. Findings should cover:
 7. **Documentation and release metadata**: user-facing surfaces, examples,
    top-level support tables, architecture/config references, migration notes,
    and changelog entries required by the trusted project policy are current.
+   Where a changelog is required, confirm the entry sits under the pending/
+   unreleased heading (not a frozen released section it can silently merge
+   into) and under the category that matches its release impact — a bug fix
+   under "fixed", an additive surface under "added", a break under "changed"/
+   "breaking" — because that category is what a later release reads to pick
+   the next version number. Flag a breaking change explicitly so it is
+   scheduled for a major rather than riding into a patch or minor.
 8. **Attribution and provenance**: preserve contributor commits. Do not rewrite
    history to make maintainer adjustments look contributor-authored.
 

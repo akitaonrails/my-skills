@@ -111,6 +111,33 @@ needed:
    canary data. Never probe third parties or production without explicit scope.
 5. For platform-specific claims, test only on available platforms; otherwise
    isolate command/config generation behind unit tests and state the gap.
+   When the platform itself is unavailable, a reproduction that mimics the
+   platform's specific behavior — the real parser or interpreter in a
+   container, a compatibility switch that reproduces the failing semantic, a
+   stub that emits the same stderr/exit code as the offending command — is
+   stronger evidence than inspection alone, provided you state plainly that
+   native-runtime confirmation on the actual platform was not done.
+6. If verifying against a *copy* of production data is genuinely necessary
+   (a live-only count, an existing corpus), take a read-only copy into a
+   disposable location, inspect it there, and delete every copy afterward.
+   Never mutate production to reproduce, and never leave production data on a
+   host after the check.
+
+Reproduce the stated root cause, not merely the symptom, and try to *disprove*
+it before accepting it — including when you wrote the report yourself. A
+plausible mechanism is not a confirmed one: query the actual state the claim
+depends on. Two traps in particular:
+
+- **A moving number is not a stuck one.** A count or backlog that is
+  decreasing over time, or that clears the moment you exercise the normal
+  path, is transient lag in an asynchronous process — not a permanently
+  wedged class. Sample it twice, or trigger the process, before calling it
+  stuck.
+- **The obvious owner may be innocent.** When a claim blames a specific
+  cause (an orphaned record, a particular branch, a named component), run the
+  query that would show it and confirm the count is non-zero there. If the
+  suspected population is empty, the real cause is elsewhere — find it before
+  proposing a fix, or you will "fix" a condition that does not occur.
 
 Classify:
 
