@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate Humanizer's portable package surfaces without external dependencies."""
+"""Check Humanizer's package files without external dependencies."""
 
 from __future__ import annotations
 
@@ -9,53 +9,79 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILL = (ROOT / "SKILL.md").read_text()
-README = (ROOT / "README.md").read_text()
-PLUGIN = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text())
 
 
-def require(match: re.Match[str] | None, message: str) -> re.Match[str]:
+def read_package_file(path: Path) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise SystemExit(f"Cannot read {path.relative_to(ROOT)}: {error}")
+
+
+SKILL_PATH = ROOT / "SKILL.md"
+SKILL = read_package_file(SKILL_PATH)
+README = read_package_file(ROOT / "README.md")
+try:
+    PLUGIN = json.loads(read_package_file(ROOT / ".claude-plugin" / "plugin.json"))
+except json.JSONDecodeError as error:
+    raise SystemExit(f"Fix the JSON in .claude-plugin/plugin.json: {error}")
+
+
+def require_match(match: re.Match[str] | None, message: str) -> re.Match[str]:
     if match is None:
         raise SystemExit(message)
     return match
 
 
-frontmatter = require(
+yaml_metadata = require_match(
     re.match(r"\A---\n(.*?)\n---\n", SKILL, re.DOTALL),
-    "SKILL.md must start with YAML frontmatter",
+    "SKILL.md must begin with YAML metadata",
 ).group(1)
 
-for nonportable_key in ("compatibility:", "allowed-tools:"):
-    if re.search(rf"(?m)^{re.escape(nonportable_key)}", frontmatter):
-        raise SystemExit(f"Remove nonportable frontmatter key: {nonportable_key[:-1]}")
+for unsupported_field in ("version:", "compatibility:", "allowed-tools:"):
+    if re.search(rf"(?m)^{re.escape(unsupported_field)}", yaml_metadata):
+        raise SystemExit(f"Remove unsupported YAML field: {unsupported_field[:-1]}")
 
-skill_version = require(
-    re.search(r'(?m)^\s+version:\s*["\']([^"\']+)["\']\s*$', frontmatter),
-    "SKILL.md metadata.version is missing",
+skill_version = require_match(
+    re.search(r'(?m)^\s+version:\s*["\']?([0-9]+\.[0-9]+\.[0-9]+)["\']?\s*$', yaml_metadata),
+    "Add metadata.version to SKILL.md as a three-part version",
 ).group(1)
-readme_version = require(
+readme_version = require_match(
     re.search(r"(?m)^- \*\*([0-9]+\.[0-9]+\.[0-9]+)\*\*", README),
-    "README version history is missing",
+    "Add a version entry to README.md",
 ).group(1)
 
-versions = {skill_version, readme_version, str(PLUGIN.get("version", ""))}
-if len(versions) != 1:
-    raise SystemExit(f"Version mismatch: {sorted(versions)}")
+package_versions = {skill_version, readme_version, str(PLUGIN.get("version", ""))}
+if len(package_versions) != 1:
+    raise SystemExit(
+        f"Use one package version in all files: {sorted(package_versions)}"
+    )
+
+skill_files = {path.relative_to(ROOT) for path in ROOT.rglob("SKILL.md")}
+if SKILL_PATH.is_symlink() or skill_files != {Path("SKILL.md")}:
+    raise SystemExit("Keep one regular SKILL.md at the repo root")
+if PLUGIN.get("skills") != ["./"]:
+    raise SystemExit("Point the Claude plugin skill loader at the repo root")
 
 pattern_numbers = [
     int(number)
     for number in re.findall(r"(?m)^### ([0-9]+)\. ", SKILL)
 ]
-if pattern_numbers != list(range(1, 34)):
-    raise SystemExit(f"Expected patterns 1-33, found {pattern_numbers}")
+pattern_count = len(pattern_numbers)
+if pattern_count == 0 or pattern_numbers != list(range(1, pattern_count + 1)):
+    raise SystemExit(f"Number SKILL.md patterns from 1 upward without gaps: {pattern_numbers}")
 
-readme_numbers = {
+readme_numbers = [
     int(number) for number in re.findall(r"(?m)^\| ([0-9]+) \|", README)
-}
-if readme_numbers != set(range(1, 34)):
-    raise SystemExit("README pattern table must contain patterns 1-33")
+]
+if sorted(readme_numbers) != pattern_numbers:
+    raise SystemExit(
+        f"List patterns 1 through {pattern_count} once each in the README tables: {sorted(readme_numbers)}"
+    )
+if f"## The {pattern_count} patterns" not in README:
+    raise SystemExit(f"Title the README pattern section 'The {pattern_count} patterns'")
 
-if len(SKILL.splitlines()) > 500:
-    raise SystemExit("SKILL.md exceeds the 500-line portability budget")
+if len(SKILL.splitlines()) > 400:
+    raise SystemExit("Keep SKILL.md at 400 lines or fewer")
 
 print(f"Humanizer package v{skill_version} is valid")

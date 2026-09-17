@@ -5,14 +5,14 @@
     "name": "blader",
     "url": "https://github.com/blader"
   },
-  "description": "The humanizer skill, installable as a Claude Code plugin.",
+  "description": "Install Humanizer as a Claude plugin.",
   "plugins": [
     {
       "name": "humanizer",
       "source": "./",
-      "description": "Remove signs of AI-generated writing from text, making it sound more natural and human. Based on Wikipedia's \"Signs of AI writing\" guide.",
+      "description": "Rewrite AI-sounding text so it reads naturally without changing what it says.",
       "license": "MIT",
-      "keywords": ["writing", "editing", "ai-detection", "humanize", "prose", "style"]
+      "keywords": ["writing", "editing", "humanize", "prose", "style"]
     }
   ]
 }
