@@ -1,0 +1,59 @@
+{
+  "slug": "v4",
+  "x_log": true,
+  "x_lim": [0.7, 160],
+  "y_lim": [84.5, 102.2],
+  "x_ticks": [1, 3, 10, 30, 100],
+  "x_tick_fmt": "${}",
+  "bubble_k": 22,
+  "bubble_base": 90,
+  "legend_cols": 2,
+  "group_colors": {
+    "codex": "#5fd35f",
+    "claude": "#e8965a",
+    "opencode": "#f2d43d",
+    "kimi": "#59c3e6"
+  },
+  "models": [
+    {"name": "GPT-6 Astra", "score": 100.0, "cost": 30.55, "minutes": 100, "group": "codex"},
+    {"name": "Claude Opus 5", "score": 100.0, "cost": 71, "minutes": 145, "group": "claude"},
+    {"name": "DeepSeek V4.1 Flash", "score": 92.5, "cost": 1.21, "minutes": 172, "group": "opencode"},
+    {"name": "Kimi K2.7", "score": 87.25, "cost": 7.75, "minutes": 175, "group": "kimi"}
+  ],
+  "text": {
+    "pt": {
+      "scatter_title": "Custo x nota dos modelos (exemplo)",
+      "scatter_subtitle": "X = custo por rodada completa (escala log)  ·  Y = nota  ·  tamanho da bolha = tempo\nEm cima + à esquerda + bolha pequena = melhor negócio",
+      "scatter_xlabel": "Custo da rodada completa (US$, escala log)",
+      "scatter_ylabel": "Nota",
+      "groups": {
+        "codex": "Codex (OpenAI)",
+        "claude": "Claude (assinatura, custo nocional)",
+        "opencode": "opencode / OpenRouter (API real)",
+        "kimi": "Kimi CLI (API real)"
+      },
+      "footnote": "Ajuste esse rodapé pra explicar quem ficou de fora e por quê.",
+      "ranking_title": "Ranking de valor: nota ÷ (custo × tempo)",
+      "ranking_subtitle": "Quanto maior, mais nota você compra por dólar e por minuto gasto  ·  índice × 1000",
+      "ranking_xlabel": "Índice de valor (maior = melhor custo-benefício)",
+      "ranking_footnote": "Mesmo recorte de modelos do gráfico anterior."
+    },
+    "en": {
+      "scatter_title": "Cost vs. score (example)",
+      "scatter_subtitle": "X = cost per full run (log scale)  ·  Y = score  ·  bubble size = wall-clock time\nTop-left + small bubble = best deal",
+      "scatter_xlabel": "Cost per full run (US$, log scale)",
+      "scatter_ylabel": "Score",
+      "groups": {
+        "codex": "Codex (OpenAI)",
+        "claude": "Claude (subscription, notional cost)",
+        "opencode": "opencode / OpenRouter (real API)",
+        "kimi": "Kimi CLI (real API)"
+      },
+      "footnote": "Adjust this footnote to explain who was left out and why.",
+      "ranking_title": "Value ranking: score ÷ (cost × time)",
+      "ranking_subtitle": "Higher means more score per dollar and per minute spent  ·  index × 1000",
+      "ranking_xlabel": "Value index (higher = better deal)",
+      "ranking_footnote": "Same model set as the chart above."
+    }
+  }
+}
