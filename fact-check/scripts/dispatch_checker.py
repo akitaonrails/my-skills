@@ -44,8 +44,8 @@ KILL_GRACE = 10          # SIGTERM -> wait -> SIGKILL
 # secrets file. Names only — values never leave the child process env.
 SECRET_ENV_NAMES = (
     "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY",
-    "GEMINI_API_KEY", "GROK_API_KEY", "ZAI_API_KEY", "KIMI_API_KEY",
-    "MOONSHOT_API_KEY", "QWEN36_API_KEY", "OLLAMA_API_KEY",
+    "GEMINI_API_KEY", "GROK_API_KEY", "XAI_API_KEY", "ZAI_API_KEY",
+    "KIMI_API_KEY", "MOONSHOT_API_KEY", "QWEN36_API_KEY", "OLLAMA_API_KEY",
 )
 
 SECRET_SHAPES = [
@@ -145,17 +145,19 @@ def build_command(harness: str, model: str | None, variant: str | None,
                   prompt: str, cwd: Path) -> tuple[list[str], str | None]:
     """Return (argv, stdin_prompt). stdin_prompt non-None => write to stdin."""
     if harness == "claude":
+        # Prompt goes right after -p and tool lists are single comma-separated
+        # args: the CLI parser is variadic and would otherwise swallow the
+        # prompt as another tool name ("Input must be provided..." error).
         cmd = [
-            "claude", "-p",
+            "claude", "-p", prompt,
             "--output-format", "stream-json",
             "--verbose",
             # Sandbox the checker to web + read: no Bash, no file writes.
-            "--allowedTools", "WebSearch", "WebFetch", "Read",
-            "--disallowedTools", "Bash", "Write", "Edit",
+            "--allowedTools", "WebSearch,WebFetch,Read",
+            "--disallowedTools", "Bash,Write,Edit",
         ]
         if model:
             cmd += ["--model", model]
-        cmd.append(prompt)
         return cmd, None
 
     if harness == "codex":

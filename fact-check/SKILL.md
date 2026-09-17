@@ -16,11 +16,15 @@ unsupported assertions, contradictions, and arguments that assume too much.
 
 1. **Opinions are untouchable without explicit confirmation.** Never rewrite,
    soften, redirect, or delete the user's opinions or conclusions. If a
-   verified fact undermines an opinion's premise, STOP: flag it in a separate
-   "confirm before rewriting" section and wait for the user's decision.
-2. **Report first, fix later.** Always deliver the categorized report and wait
-   for the user to confirm which items to fix. Never start editing the article
-   before that confirmation.
+   verified fact undermines an opinion's premise (a deal breaker for the
+   article's conclusions), STOP: flag it in a separate "confirm before
+   rewriting" section and wait for the user's decision.
+2. **Pass 1 auto-applies fixes by default.** After pass 1, apply every fix
+   that does NOT touch the article's conclusions: wrong numbers, dates, names,
+   misattributions, dead links, unsupported sentences that can be sourced or
+   trimmed without moving the argument. Only deal breakers (a verified fact
+   that pulls the thread of a conclusion) wait for the user. Pass 2 always
+   reports first and asks before touching anything it finds.
 3. **Primary sources only.** Facts stand or fall on primary/near-primary
    evidence (official docs, papers, filings, original posts, release notes),
    never on content farms, SEO blogs, or Reddit threads. See
@@ -32,16 +36,28 @@ unsupported assertions, contradictions, and arguments that assume too much.
    flag only when they break the argument, and then as a nitpick/logic item,
    never as a rewrite mandate.
 
-## Fast path
+## Fast path (two passes, always)
 
 ```
-Phase 0  Setup: locate file(s), choose harness+model (config/models.json)
+Phase 0  Setup: locate file(s), choose harnesses (pass 1 + pass 2, config/models.json)
 Phase 1  Extract: read article, build claims.json + argument map
-Phase 2  Fan out: scripts/fanout.py -> parallel headless checkers
+Phase 2  PASS 1: scripts/fanout.py with the first harness (default: grok)
 Phase 3  Audit: your own hostile logic/consistency pass (no web)
-Phase 4  Report: severity-laddered findings + confirm-before-rewriting queue
-Phase 5  (after user confirmation only) apply approved fixes
+Phase 4  Report pass 1: auto-fix everything that does not touch the
+         conclusions (humanizer on changed prose for blog posts); only deal
+         breakers for the article's conclusions wait for the user
+Phase 6  PASS 2: re-extract claims from the FIXED article, fanout.py with the
+         second harness (default: claude)
+Phase 7  Final report: new findings from pass 2 + verification that pass-1
+         fixes actually landed -> confirm with user before fixing -> apply
 ```
+
+Two passes are mandatory, never parallel: pass 1 (cheap harness) finds the
+breakage, approved fixes land, then pass 2 (stronger harness) audits the
+corrected article with clean context. Running both harnesses on the same
+pre-fix text wastes the second pass on findings that are already fixed.
+Re-extract claims before pass 2 (Phase 1 again on the fixed file) because
+fixed sentences change the quoted text the checkers verify.
 
 ## Phase 0 — Setup
 
@@ -49,9 +65,13 @@ Phase 5  (after user confirmation only) apply approved fixes
   sibling, the PT `index.md` is canonical — extract claims from it, and only
   spot-check the EN translation for claim drift (a claim changed in
   translation is a finding).
-- Pick the harness: default from `config/models.json` (`zcode` +
-  `zai/glm-5.3-flash`, flat rate). Stronger verification pass → claude/codex
-  with a mid model. Harness auth/setup: `references/harness-setup.md`.
+- Pick the harnesses: pass 1 defaults to `config/models.json`
+  `default_harness` (currently `grok`, default model, cheap per check); pass 2
+  defaults to `second_pass_harness` (currently `claude`, session default
+  covered by the Max subscription). Override per run with `--harness`/
+  `--model`/`--variant` when the user asks for specific harnesses or the
+  defaults are unavailable (check auth first: `references/harness-setup.md`).
+  Harness auth/setup: `references/harness-setup.md`.
 - Work dir: `/tmp/fact-check/<slug>-<YYYYMMDD-HHMM>/` — never inside a repo.
 
 ## Phase 1 — Claim extraction (you, no subagents)
@@ -75,14 +95,14 @@ Rules:
 - Also write a short **argument map** (for Phase 3): the article's main
   opinion(s), the claims each argument leans on, and implicit assumptions.
 
-## Phase 2 — Fan out verification
+## Phase 2 — Fan out verification (pass 1)
 
 ```sh
 python3 <skill-dir>/scripts/fanout.py \
   --claims /tmp/fact-check/<run>/claims.json \
-  --out-dir /tmp/fact-check/<run> \
+  --out-dir /tmp/fact-check/<run>/pass1 \
   --title "Article title" --lang pt-BR \
-  --harness zcode --batch-size 6 --parallel 3
+  --harness grok --batch-size 6 --parallel 3
 ```
 
 - Do a `--dry-run` first to sanity-check batching.
@@ -97,6 +117,23 @@ python3 <skill-dir>/scripts/fanout.py \
 Fallback if no harness is available: spawn native subagents (task tool) with
 `references/checker-prompt.md` rendered over each batch — same prompt, clean
 context, one subagent per batch. Slower and pricier; scripts are preferred.
+
+## Phase 6 — Pass 2 (fixed article, second harness)
+
+After the user approves pass-1 fixes and they land (Phase 5), re-run Phase 1
+on the FIXED article into `claims-pass2.json` (quotes drift when fixes change
+sentences), then fan out again with the pass-2 harness:
+
+```sh
+python3 <skill-dir>/scripts/fanout.py \
+  --claims /tmp/fact-check/<run>/claims-pass2.json \
+  --out-dir /tmp/fact-check/<run>/pass2 \
+  --title "Article title" --lang pt-BR \
+  --harness claude --batch-size 6 --parallel 3
+```
+
+Pass 2's report (Phase 7) focuses on what pass 1 missed or what the fixes
+broke; re-verify that every approved pass-1 fix actually shipped.
 
 ## Phase 3 — Hostile logic audit (you, no web)
 
@@ -115,7 +152,7 @@ Cross-check verdicts against the map: any load-bearing claim (the argument
 collapses without it) with verdict `false`/`imprecise`/`misleading`/`
 unsupported` goes to the confirm-before-rewriting queue.
 
-## Phase 4 — Report (deliver, then stop)
+## Phase 4 — Pass 1 report + auto-fix
 
 Present in the session's conversation language, quotes in the article's
 language. Severity ladder, worst first:
@@ -130,24 +167,34 @@ language. Severity ladder, worst first:
 | S6 | ⚪ Nitpick | Wording imprecision, minor anachronisms, harmless sloppiness |
 
 Per item: claim quote → verdict → evidence (url + source quote + tier) →
-proposed minimal fix. End the report with:
+proposed minimal fix.
 
-1. **⚠ Confirm before rewriting** — items where a verified fact undermines an
-   opinion's premise. State the tension plainly and ask the user to decide.
-2. Totals per severity, plus tokens/cost spent (from `cost_report.md` /
+Then, per non-negotiable 2: **apply immediately** every fix that does not
+touch the article's conclusions, and list what you changed. The report ends
+with:
+
+1. **✅ Auto-fixed** — the S1/S2/S4/S6 items already applied, one line each.
+2. **⚠ Confirm before rewriting (deal breakers)** — items where a verified
+   fact undermines an opinion's premise or the article's conclusions. State
+   the tension plainly and ask the user to decide. Only these wait.
+3. Totals per severity, plus tokens/cost spent (from `cost_report.md` /
    `summary.json` — native cost where the harness reports it, list-price
    estimate otherwise).
-3. "Which items should I fix?" — then STOP and wait.
 
-## Phase 5 — Apply approved fixes (only after confirmation)
+Then proceed to Phase 6 (pass 2) without waiting, unless deal breakers are
+pending — unresolved deal breakers block pass 2, since pass 2 audits the
+fixed article and the fix is undecided.
 
-- Fix exactly the approved items with minimal edits preserving voice.
+## Phase 5 — Apply fixes
+
+- Fix exactly the approved items (user-confirmed, or auto-approved under
+  non-negotiable 2 in pass 1) with minimal edits preserving voice.
 - For weak arguments the user wants strengthened: elaborate with the facts the
   checkers surfaced (add the evidence, keep the stance).
 - Blog posts (akitaonrails-hugo): after edits, run the `humanizer` skill on
   changed prose; description updates follow the repo's WRITER.md gate.
-- Never touch opinions beyond the explicitly approved scope; if a fix starts
-  pulling an opinion's thread, stop and re-confirm.
+- Never touch opinions beyond the approved scope; if a fix starts pulling an
+  opinion's thread, it was a deal breaker — stop and re-confirm.
 
 ## Hygiene
 
