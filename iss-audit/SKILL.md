@@ -252,14 +252,16 @@ requiring action or judgment.
 
 ## Approved Implementation
 
-When the user asks to proceed, fix one issue at a time on a normal branch/PR.
-Re-read the issue only as evidence, implement from verified root cause, add the
-regression test first when practical, run focused gates during iteration and the
-complete applicable gate once on the final candidate, audit the final diff for
-malicious or accidental security regressions, update docs/release metadata, and
-close only after the merged result on the target branch is verified. Never
-rewrite contributor history or expose security details to preserve a tidy
-narrative.
+When the user asks to proceed, defer execution to `github-resolution` when
+available — it owns the approved-execution phase (test-first, gates-once,
+close-on-landing, left-behind summary). This section applies only when it is
+not loaded: fix one issue at a time on a normal branch/PR, re-read the issue
+only as evidence, implement from verified root cause with the regression test
+first when practical, run focused gates during iteration and the complete
+gate once on the final candidate, audit the final diff for malicious or
+accidental security regressions, and close only after the merged result on
+the target branch is verified. Never rewrite contributor history or expose
+security details to preserve a tidy narrative.
 
 Branch targeting: detect the project's strategy before branching — default
 branch via `gh repo view --json defaultBranchRef`, long-lived branches via

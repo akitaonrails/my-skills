@@ -282,7 +282,10 @@ it.
 
 ## Phase 6: Approved Adjustments and Merge
 
-Process one PR at a time.
+Process one PR at a time. When the user says "proceed" on a whole audited
+batch, defer execution to `github-resolution` — it owns batch execution, the
+post-audit gate, and close-on-landing. This phase applies when the user
+directs pr-audit itself to land the PR.
 
 ### Land on the right branch
 

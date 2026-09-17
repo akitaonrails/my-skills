@@ -10,6 +10,12 @@ ticket at a time. This skill is the execution phase; the audit skills are the
 judgment phase. Never re-litigate an audit here, and never execute a change an
 audit did not approve.
 
+Detect the project's branch strategy before landing anything (the canonical
+rule lives in `iss-audit`'s Approved Implementation): stated policy wins,
+single `main`/`master` is the default, split repos route fixes vs features
+accordingly. "Mainline" below means the branch the project's release flow
+actually reads from.
+
 ## Preconditions
 
 1. A `pr-audit` and/or `iss-audit` report exists in this conversation with
@@ -99,21 +105,19 @@ ticket/PR and note it — do not smuggle it.
   fast feedback, fix failures immediately.
 - Confirm no regressions: the ticket's regression test fails on the base and
   passes on the fix; adjacent behavior still passes.
-- RuboCop/lint on changed files.
+- Lint on changed files (e.g. RuboCop in a Ruby project).
 
 ### 5. Resolve the ticket state
 
-- For issues: the fix must be merged or pushed in this batch's final push set
-  before closing. Close with the fix commit reference (`Closes #N` in the
-  commit message or a closing comment). Never close as completed without the
-  fix being merged or in the final push set.
-- **Close on landing — never dangle tickets for release.** Once a PR is
-  merged, or an issue fix is implemented, tested, and pushed with hosted CI
-  green on that exact SHA, the ticket is closed in the same run. A resolved
-  ticket left open until a tag, deploy, or release ships is a defect: open
-  tickets mean open work. Release timing belongs to the version strategy
-  (below), not to ticket state — if a "shipped in vX.Y" association is
-  wanted, record it in the changelog, not by delaying closure.
+- **Close on landing — never dangle tickets for release.** An issue closes
+  once its fix is merged (or sits in this batch's final push set) with
+  hosted CI green on that exact SHA — same run, with the fix commit
+  reference (`Closes #N` in the commit message or a closing comment). Never
+  close as completed without the fix being merged or in the final push set,
+  and never leave a resolved ticket open until a tag, deploy, or release
+  ships: open tickets mean open work. Release timing belongs to the version
+  strategy (below), not to ticket state — a "shipped in vX.Y" association
+  goes in the changelog, not in delayed closure.
 - For PRs: apply approved adjustments as separate maintainer commits on the
   contributor branch (never rewrite/squash contributor history), re-run the
   focused gate, re-check the hostile-change gate on the new head, then merge
@@ -129,7 +133,8 @@ ticket/PR and note it — do not smuggle it.
 Before commit/push of the final candidate:
 
 1. Full project gate from trusted instructions (e.g. `bin/ci`): lint,
-   security scanners, complete Ruby + JavaScript suites.
+   security scanners, the complete test suites for the project's stack
+   (for a Rails project: Ruby + JavaScript).
 2. One clean full-gate run on the exact final tree — do not reuse a green
    run from an earlier, materially different candidate. Prior focused runs
    are iteration evidence; the full gate is the release evidence.

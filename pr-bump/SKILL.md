@@ -1,6 +1,6 @@
 ---
 name: pr-bump
-description: Merge Dependabot gem/dependency bump PRs quickly and safely. Use when the user says opened PRs, Dependabot, gem updates, bump PRs, test, push, close, or deploy dependency-only pull requests.
+description: Merge Dependabot / dependency-bot bump PRs quickly and safely. Use only for bot-authored dependency-only PRs (Dependabot, gem/npm/pip bumps); anything touching application code, migrations, Dockerfiles, or non-dependency config goes to pr-audit instead.
 ---
 
 # PR Bump
@@ -41,6 +41,14 @@ each Dependabot branch one by one.
   autoformatter changes dozens of files, revert it and narrow the fix.
 - If any PR changes application code, migrations, Docker files, or config that
   is not clearly dependency metadata, stop and do a normal PR review instead.
+- Supply-chain floor: before running the update, verify each bumped
+  dependency resolves from the default public registry (rubygems.org, npm,
+  pypi) with the expected name, version, and checksums. Treat git/path
+  sources, renamed or republished packages, typosquat-adjacent names, or new
+  install-time/build hooks appearing in the resolution as stop-and-audit:
+  hand the PR to `pr-audit`. `bundler-audit` only flags known advisories —
+  a well-formed lockfile bump to a trojaned gem passes every file-shape
+  check, which is exactly the case this floor exists for.
 
 ## Step 1: Inspect Open PRs
 
@@ -134,11 +142,23 @@ Known CI-hardening patterns from this project:
 
 - Tests that instantiate API clients must set fake API keys before client
   construction, then restore the original `ENV` value in teardown.
-- GitHub Actions test jobs need deterministic Active Record encryption env vars.
+- GitHub Actions test jobs need deterministic Active Record encryption env
+  vars (the sequential hex values above are deterministic non-production
+  test keys).
 - If Docker deploy builds from working tree, stash local `.ai-jail` changes so
   the image matches committed code.
 
 ## Step 4: Commit and Push
+
+Detect the default branch first and push to that — never assume `master`:
+
+```bash
+gh repo view --json defaultBranchRef --jq .defaultBranchRef.name
+```
+
+`Closes #N` only closes the PR when the commit lands on the default branch;
+a hard-coded `master` push on a `main`-default repo strands the PRs open and
+points the CI watch at a branch that never received the push.
 
 Stage only intended files, usually just `Gemfile.lock`:
 
@@ -147,7 +167,7 @@ git add Gemfile.lock
 git diff --cached --stat
 git diff --cached
 git commit -m "Bump <gem_one> and <gem_two>" -m "Closes #<pr1>. Closes #<pr2>."
-git push origin master
+git push origin <default-branch>
 ```
 
 If you made tiny CI/test hardening fixes, stage those explicitly in a separate
@@ -158,7 +178,7 @@ After push:
 
 ```bash
 gh pr list --state open --json number,title,url
-gh run list --branch master --limit 5 --json databaseId,status,conclusion,headSha,displayTitle,event,createdAt,url
+gh run list --branch <default-branch> --limit 5 --json databaseId,status,conclusion,headSha,displayTitle,event,createdAt,url
 gh run watch <push-ci-run-id> --exit-status
 ```
 
@@ -207,6 +227,8 @@ Report concisely:
 - local checks run and pass/fail result
 - GitHub CI result
 - deploy result and service health
+- PRs intentionally not consolidated, and why (suspicious source, major
+  bump, failing tests, non-dependency files)
 - any remaining local uncommitted changes intentionally left alone
 
 Example final note:
