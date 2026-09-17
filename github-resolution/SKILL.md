@@ -1,6 +1,6 @@
 ---
 name: github-resolution
-description: Execute the approved outcomes of a pr-audit and/or iss-audit — fix or adjust everything the audit found necessary before merging, verify no regressions, cover every new behavior with unit tests, keep the code clean with zero slop, and resolve each approved ticket one by one. When more than 3 tickets are resolved in one batch, run pr-post-audit before committing and pushing. Use after an audit when the user says to proceed, fix, resolve, adjust, or implement what the audit recommended.
+description: Execute the approved outcomes of a pr-audit and/or iss-audit — fix or adjust everything the audit found necessary before merging, verify no regressions, cover every new behavior with unit tests, keep the code clean with zero slop, and resolve and close each approved ticket one by one as its change lands (merged PR or implemented, tested, pushed issue fix — never dangling until release). When more than 3 tickets are resolved in one batch, run pr-post-audit before committing and pushing. Use after an audit when the user says to proceed, fix, resolve, adjust, or implement what the audit recommended.
 ---
 
 # GitHub Resolution
@@ -17,10 +17,16 @@ audit did not approve.
    merge / approved adjustments). If there is no audit, stop and run the
    matching audit skill first.
 2. The user approved execution ("do it", "fix everything", "proceed", or a
-   standing instruction in trusted project files). `Needs reporter
-   information` and `Decline` verdicts are NOT approvals — those tickets get
-   a posted response/comment, not code.
-3. Confirm the working tree is clean or that unrelated local changes are
+   standing instruction in trusted project files).
+3. **Approved tickets only — leave the rest behind.** The only tickets this
+   skill executes are the ones whose audit verdict is an explicit approval.
+   `Needs reporter information`, `Decline`, `Duplicate`, tickets with open
+   `[BLOCKING]`/`[CRITICAL]` findings, and anything the audit left uncertain
+   are out of scope: they stay open, untouched by this run, and each one is
+   explained in the final left-behind summary. Never half-execute a blocked
+   ticket "while we're here", and never resolve a ticket the audit did not
+   approve.
+4. Confirm the working tree is clean or that unrelated local changes are
    understood and excluded: `git status --short --branch`.
 
 ## Trust Boundary
@@ -97,16 +103,25 @@ ticket/PR and note it — do not smuggle it.
 
 ### 5. Resolve the ticket state
 
-- For issues: the code must land (or be scheduled to land in this batch)
+- For issues: the fix must be merged or pushed in this batch's final push set
   before closing. Close with the fix commit reference (`Closes #N` in the
   commit message or a closing comment). Never close as completed without the
   fix being merged or in the final push set.
+- **Close on landing — never dangle tickets for release.** Once a PR is
+  merged, or an issue fix is implemented, tested, and pushed with hosted CI
+  green on that exact SHA, the ticket is closed in the same run. A resolved
+  ticket left open until a tag, deploy, or release ships is a defect: open
+  tickets mean open work. Release timing belongs to the version strategy
+  (below), not to ticket state — if a "shipped in vX.Y" association is
+  wanted, record it in the changelog, not by delaying closure.
 - For PRs: apply approved adjustments as separate maintainer commits on the
   contributor branch (never rewrite/squash contributor history), re-run the
   focused gate, re-check the hostile-change gate on the new head, then merge
-  with the repo's normal strategy.
-- For `Needs info`/`Decline`/`Duplicate` outcomes: post the audit's drafted
-  response verbatim or lightly edited; close only when the verdict says so.
+  with the repo's normal strategy. Merging closes the PR — GitHub does that
+  automatically; verify it did.
+- For `Needs info`/`Decline`/`Duplicate` outcomes: leave the ticket behind —
+  no code, no closure. Post the audit's drafted response only when the user
+  explicitly asks for it; close only when the verdict says so.
 - Keep PR/issue comments evidence-based and free of unverified claims.
 
 ## Final Gate (every batch, regardless of size)
@@ -138,8 +153,10 @@ Before commit/push of the final candidate:
 
 Landing a fix and shipping it are separate decisions. Resolve tickets onto
 the mainline; let the version strategy decide when a release cuts and which
-number it carries. Follow the project's own policy where it states one; where
-it does not, this is a safe default.
+number it carries. Nothing in this section defers ticket closure — resolved
+tickets were already closed when their change landed (see "Resolve the ticket
+state"); only the version number waits. Follow the project's own policy
+where it states one; where it does not, this is a safe default.
 
 - **Classify every resolved ticket by release impact**, using the project's
   own changelog/section conventions as the signal: a bug fix is a patch, an
@@ -163,7 +180,8 @@ it does not, this is a safe default.
 - **Accumulating vs. releasing are distinct asks.** "Resolve and push" means
   the fixes reach the mainline and hosted CI is green; it does not authorize
   a tag, a version bump, or a deploy. Cutting the release is a separate,
-  explicit step — do not bundle it in unless the user asked for it.
+  explicit step — do not bundle it in unless the user asked for it. When the
+  user does ask, execute it with the `release` skill.
 
 ## Attribution
 
@@ -187,8 +205,16 @@ Hosted CI: <run + conclusion on exact SHA>
 Clean-code check: <slop findings: none | list + fixes>
 Deploy/release: <done as requested | not requested>
 
-Left intentionally untouched: <needs-info tickets, declined items, unrelated local changes>
+Left intentionally untouched (mandatory — EVERY ticket not resolved in this
+run appears here, each with its reason):
+- #N: <audit verdict / blocker> — <one-line reason it stayed open: needs
+  reporter info, declined, duplicate, blocking finding, uncertain evidence,
+  deferred by user, out of batch scope>
 ```
+
+A run that resolves three tickets and silently drops four open ones is an
+incomplete report. The left-behind list is how the user knows what still
+needs a decision — never omit it, never compress it to a count.
 
 If any step cannot be completed (failing gate, audit finding reopened,
 missing evidence), stop and report the blocker instead of pushing.

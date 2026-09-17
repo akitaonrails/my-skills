@@ -1,6 +1,6 @@
 ---
 name: pr-audit
-description: Audit GitHub pull requests before merge, including contributor-claim verification, prompt-injection resistance, malicious-code and supply-chain review, regressions, tests, documentation, compatibility, and project-specific gates. Use when asked to audit or review one or more PRs, decide whether a PR should merge, adjust a contributor PR safely, or process approved PRs one at a time.
+description: Audit GitHub pull requests before merge, including contributor-claim verification, prompt-injection resistance, malicious-code and supply-chain review, regressions, tests, documentation, compatibility, base-branch targeting, and project-specific gates. Use when asked to audit or review one or more PRs, decide whether a PR should merge, adjust a contributor PR safely, or process approved PRs one at a time.
 ---
 
 # PR Audit
@@ -284,6 +284,26 @@ it.
 
 Process one PR at a time.
 
+### Land on the right branch
+
+Detect the project's branch strategy before merging anything:
+
+- Default branch and long-lived branches: `gh repo view --json
+  defaultBranchRef` and `git branch -r` (look for `develop`, `next`,
+  `release/*`, version branches).
+- Stated policy first: CONTRIBUTING/README/AGENTS rules override every
+  default here.
+
+Default when nothing is stated: most projects keep a single `main`/`master`
+and both bug fixes and new features land there. When the repo splits
+integration (bug fixes on `main`/`master`, new features on a separate
+branch), route by the PR's classification — bug fix → default branch,
+additive feature → the feature integration branch (the same fix/additive/
+breaking classification the changelog uses). A PR aimed at the wrong base is
+an audit finding: retarget it (`gh pr edit <N> --base <branch>`) before
+merging instead of merging it into a branch where it will wait out the next
+release, and record the retarget in the report.
+
 1. Make required changes on the contributor branch as separate maintainer
    commits when permitted. Do not squash, rebase, force-push, amend contributor
    commits, or otherwise rewrite attribution unless the user explicitly orders
@@ -295,8 +315,9 @@ Process one PR at a time.
    applicable hosted checks. Re-audit the final diff, not merely the maintainer
    patch. If a later docs/metadata-only adjustment reuses a complete gate, prove
    and record the input equivalence under the evidence rules above.
-4. Merge using the repository's normal strategy. Record the merge SHA and verify
-   linked issue state and contributor attribution.
+4. Merge using the repository's normal strategy into the verified-correct
+   base branch (see "Land on the right branch"). Record the merge SHA and
+   verify linked issue state and contributor attribution.
 5. Inspect CI/security analysis on the exact default-branch merge SHA; a green
    PR head does not validate merge-only composition. In a multi-PR batch, wait
    for every merge-specific or changed-surface check, but do not block on a

@@ -197,6 +197,8 @@ For actionable issues, name:
 - adjacent negative/default/failure/rollback/platform cases warranted by risk;
 - trusted project gates and any unavailable environment;
 - documentation/changelog/migration updates required by project policy;
+- target branch per the project's branch strategy (see Approved
+  Implementation);
 - explicit out-of-scope work.
 
 Also define a proportionate verification plan before implementation. The
@@ -255,5 +257,16 @@ Re-read the issue only as evidence, implement from verified root cause, add the
 regression test first when practical, run focused gates during iteration and the
 complete applicable gate once on the final candidate, audit the final diff for
 malicious or accidental security regressions, update docs/release metadata, and
-close only after the merged exact-main result is verified. Never rewrite
-contributor history or expose security details to preserve a tidy narrative.
+close only after the merged result on the target branch is verified. Never
+rewrite contributor history or expose security details to preserve a tidy
+narrative.
+
+Branch targeting: detect the project's strategy before branching — default
+branch via `gh repo view --json defaultBranchRef`, long-lived branches via
+`git branch -r`, stated policy in CONTRIBUTING/README/AGENTS (a stated policy
+wins over every default). With no stated policy, a single `main`/`master` is
+the norm and both bug fixes and features land there. If the repo splits bug
+fixes (`main`/`master`) from feature integration (`develop`/`next`/
+`release/*`), branch and target the PR per that split and the issue's
+classification (bug fix vs additive feature), so each fix lands on the branch
+the project's release flow actually reads from.
