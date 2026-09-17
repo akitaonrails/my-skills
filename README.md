@@ -48,6 +48,28 @@ symlink: the harness directories also hold entries that must **not** live here
 - Vendor bundles: `~/.grok/bundled/skills`, `~/.config/crush/anthropic_skills/`,
   `~/.gemini/antigravity-cli/builtin/skills`.
 
+## External components (inventory + update procedure)
+
+Third-party skills and plugins installed around this repo. None of them
+auto-update; re-check occasionally.
+
+| Component | Source | Where it lives | Update procedure |
+| --- | --- | --- | --- |
+| humanizer | [blader/humanizer](https://github.com/blader/humanizer) | vendored in this repo (`humanizer/`) | re-pull upstream, strip `.git`, run `python3 humanizer/scripts/validate-package.py` |
+| simplify | adapted from Addy Osmani's [agent-skills](https://github.com/addyosmani/agent-skills) | this repo (`simplify/`) | one-time adaptation; diff upstream manually when it drifts |
+| codemap, clonedeps | oh-my-opencode-slim heritage | this repo | local forks — no upstream sync |
+| oh-my-opencode-slim | npm `oh-my-opencode-slim` | opencode plugin (`~/.config/opencode/opencode.json`) + config skill in `~/.config/opencode/skills/` | `opencode plugin oh-my-opencode-slim` run from a non-repo dir (it writes local scope otherwise), restart opencode |
+| opencode-openai-codex-auth | npm | opencode plugin | same as above |
+| agent-browser | npm `agent-browser` (mise node global) | CLI + `~/.config/opencode/skills/agent-browser/` | `npm i -g agent-browser@latest`, then copy the package's `skills/agent-browser/SKILL.md` over the installed skill |
+| Claude Code plugins (clangd-lsp, frontend-design, rust-analyzer-lsp, typescript-lsp) | claude-plugins-official | `~/.claude.json` | `claude plugin update <name>` |
+| Claude synced skills (skill-creator, docs, pdf, …) | claude.ai cloud sync | `~/.claude/skills/synced/` | managed by account sync |
+| omarchy, diagnose-crash | omarchy package | symlinks into `/usr/share/omarchy/default/agents/skills/` | omarchy system updates |
+| Grok / crush / Antigravity bundled skills | ship with the tool | `~/.grok/bundled/skills`, `~/.config/crush/anthropic_skills/`, `~/.gemini/antigravity-cli/builtin/skills` | update the tool |
+
+Last checked 2026-09-17 — humanizer 3.0.0 (up to date), oh-my-opencode-slim
+2.2.21 stable (beta line 3.0.0-beta.13 available), opencode-openai-codex-auth
+4.4.0, agent-browser 0.38.1, all four Claude plugins latest.
+
 ## Rules
 
 `.gitignore` blocks `.venv/`, `__pycache__/`, binaries (`*.pdf`, images,
