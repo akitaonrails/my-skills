@@ -12,13 +12,21 @@ The common case is a set of Bundler/Ruby gem update PRs that only touch
 `Gemfile.lock`. Prefer a single local consolidated lockfile update over merging
 each Dependabot branch one by one.
 
+Batch, never serialize: several bump PRs are one unit of work. Consolidate
+every one of them, resolve each dependency to the newest compatible version
+(which may be newer than any of the PRs propose), verify the whole set with a
+single test/CI pass, and fix whatever that exposes in subsequent commits.
+Merging and testing one bump at a time is exactly the pipeline churn this
+skill exists to avoid.
+
 ## Fast Path Summary
 
 1. Inspect local git state and open PRs.
 2. Confirm every PR is a dependency-only bump.
 3. Consolidate all bumps locally with the package manager, updating each
    dependency to the latest resolvable version rather than the PR's exact target.
-4. Run local CI-equivalent checks.
+4. Run local CI-equivalent checks once over the whole consolidated set —
+   never per-bump.
 5. Commit only intended files with `Closes #N` references.
 6. Push, confirm PRs closed, and wait for GitHub CI.
 7. Deploy only after CI passes when the user asked for deploy.
@@ -147,6 +155,11 @@ If tests fail:
    pre-existing test fragility.
 3. Make only minimal robust fixes.
 4. Re-run the focused test and the full CI-equivalent command set.
+5. Fix forward. Land the consolidated bump, then repair commits on top — do
+   not un-bundle the batch back into per-PR merges. If you need to isolate a
+   culprit dependency to diagnose, do it in a scratch worktree, then express
+   the outcome inside the consolidated change as a version pin, a constraint
+   tweak, or a code fix.
 
 Known CI-hardening patterns from this project:
 
@@ -254,5 +267,7 @@ Done.
 - Local tests, RuboCop, Brakeman, and bundler-audit passed.
 - GitHub CI passed.
 - Deployed successfully; app is healthy, worker and mail fetcher are up.
+- Deferred #31 (rmcp 2.0 major bump): commented + closed on the PR, tracking
+  issue #47.
 - `.ai-jail` still has uncommitted local changes and was left untouched.
 ```
