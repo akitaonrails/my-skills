@@ -1,5 +1,12 @@
 # my-skills
 
+> **These are Fabio Akita's personal skills** — custom-tailored to his
+> machines, subscriptions, and workflow. They are published for reference and
+> inspiration. Treat them as examples of what a skill can look like, then ask
+> your own LLM to write skills for your exact needs. Avoid reusing other
+> people's skills verbatim: they carry someone else's assumptions, paths, and
+> credentials layout.
+
 Single master repository for my agent skills, shared across every AI agent CLI
 on this machine. Each harness's `skills/` directory stays a **real directory**
 whose entries are symlinks into this repo — so one edit here reaches all of them.
@@ -43,8 +50,10 @@ symlink: the harness directories also hold entries that must **not** live here
 
 ## Rules
 
-`.gitignore` blocks `.venv/`, `__pycache__/`, and binaries (`*.pdf`, images,
-archives). Assessment PDFs in particular must never be committed here.
+`.gitignore` blocks `.venv/`, `__pycache__/`, binaries (`*.pdf`, images,
+archives), and credential-shaped files (`.env`, `*.key`, `*token*`,
+`*secret*`). Assessment PDFs and anything resembling a key or token must never
+be committed here — the repo is public.
 
 `humanizer` is vendored from <https://github.com/blader/humanizer> with its
 `.git` stripped. Re-pull upstream manually if it needs updating.

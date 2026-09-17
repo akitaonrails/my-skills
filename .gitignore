@@ -13,3 +13,15 @@ __pycache__/
 *.png
 *.jpg
 *.jpeg
+
+# Credentials — this repo is PUBLIC. fact-check harness outputs and any
+# accidental secret material must never be committed.
+.env
+.env.*
+*.key
+*.pem
+*token*
+*secret*
+*credential*
+.fact-check/
+

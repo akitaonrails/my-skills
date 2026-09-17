@@ -16,13 +16,13 @@ Legacy `.slim/cartography.json` state is migrated to `.slim/codemap.json` automa
 
 ```bash
 # Initialize mapping
-node codemap.mjs init --root /repo --include "src/**/*.ts" --exclude "node_modules/**"
+node scripts/codemap.mjs init --root /repo --include "src/**/*.ts" --exclude "node_modules/**"
 
 # Check what changed
-node codemap.mjs changes --root /repo
+node scripts/codemap.mjs changes --root /repo
 
 # Update hashes
-node codemap.mjs update --root /repo
+node scripts/codemap.mjs update --root /repo
 ```
 
 ## Outputs
@@ -56,4 +56,6 @@ Empty templates created in each folder for fixers to fill with:
 
 ## Installation
 
-Installed automatically via oh-my-opencode-slim installer when custom skills are enabled.
+Lives in the `my-skills` master repo and is symlinked into each harness's
+skills directory (Claude Code, Codex, opencode, shared `.agents`). See the
+repo README for the linking recipe.

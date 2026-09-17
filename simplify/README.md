@@ -4,9 +4,8 @@ Behavior-preserving code simplification and readability-focused refactoring.
 
 ## Overview
 
-This bundled skill helps the `oracle` agent review and simplify code without
-changing behavior. It focuses on readability, maintainability, and reducing
-unnecessary complexity.
+This skill helps agents review and simplify code without changing behavior. It
+focuses on readability, maintainability, and reducing unnecessary complexity.
 
 ## Source
 
@@ -15,5 +14,6 @@ Adapted from Addy Osmani's
 
 ## Installation
 
-Bundled with `oh-my-opencode-slim` and installed automatically when bundled
-skills are enabled via the installer.
+Lives in the `my-skills` master repo and is symlinked into each harness's
+skills directory (Claude Code, Codex, opencode, shared `.agents`). See the
+repo README for the linking recipe.

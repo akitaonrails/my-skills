@@ -1,8 +1,9 @@
 # clonedeps
 
-`clonedeps` is a bundled OpenCode workflow skill for cloning a small set of
-important dependency source repositories into a local ignored workspace so agents
-can read library internals.
+`clonedeps` is a workflow skill for cloning a small set of important
+dependency source repositories into a local ignored workspace so agents can
+read library internals. It works in any harness that follows the
+orchestrator-specialist model.
 
 It is orchestrator-owned. The orchestrator delegates source discovery and URL/ref
 resolution to `@librarian`, asks for approval, then performs the git and
