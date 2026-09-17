@@ -60,7 +60,7 @@ auto-update; re-check occasionally.
 | codemap, clonedeps | oh-my-opencode-slim heritage | this repo | local forks — no upstream sync |
 | oh-my-opencode-slim | npm `oh-my-opencode-slim` | opencode plugin (`~/.config/opencode/opencode.json`) + config skill in `~/.config/opencode/skills/` | `opencode plugin oh-my-opencode-slim` run from a non-repo dir (it writes local scope otherwise), restart opencode |
 | opencode-openai-codex-auth | npm | opencode plugin | same as above |
-| agent-browser | npm `agent-browser` (mise node global) | CLI + `~/.config/opencode/skills/agent-browser/` | `npm i -g agent-browser@latest`, then copy the package's `skills/agent-browser/SKILL.md` over the installed skill |
+| agent-browser | npm `agent-browser` (mise node global) | CLI + SKILL.md vendored in this repo (`agent-browser/`), symlinked from `~/.config/opencode/skills` | `npm i -g agent-browser@latest`, then copy the package's `skills/agent-browser/SKILL.md` over `agent-browser/SKILL.md` in this repo |
 | Claude Code plugins (clangd-lsp, frontend-design, rust-analyzer-lsp, typescript-lsp) | claude-plugins-official | `~/.claude.json` | `claude plugin update <name>` |
 | Claude synced skills (skill-creator, docs, pdf, …) | claude.ai cloud sync | `~/.claude/skills/synced/` | managed by account sync |
 | omarchy, diagnose-crash | omarchy package | symlinks into `/usr/share/omarchy/default/agents/skills/` | omarchy system updates |
