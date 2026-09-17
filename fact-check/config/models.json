@@ -1,0 +1,49 @@
+{
+  "_comment": "Default cheap fact-checker models per harness. Model ids are public strings, not secrets. 'model: null' means use the harness's own configured default. Override per run with --model/--variant. Rates are approximate list prices (USD per 1M tokens) for cost awareness only.",
+  "default_harness": "zcode",
+  "harnesses": {
+    "zcode": {
+      "model": "zai/glm-5.3-flash",
+      "variant": null,
+      "note": "z.ai GLM Coding Plan, flat rate - effectively free per check",
+      "cost_note": "GLM Coding Plan is flat-rate: marginal USD cost is ~0; the estimated figure is list-price equivalent for awareness only.",
+      "rates_per_m": { "input": 0.075, "output": 0.25 }
+    },
+    "claude": {
+      "model": null,
+      "variant": null,
+      "note": "null = session default (covered by Max subscription). For per-token API use, pass e.g. --model claude-haiku-4-5",
+      "rates_per_m": { "input": 1.0, "output": 5.0 }
+    },
+    "codex": {
+      "model": null,
+      "variant": "low",
+      "note": "null = config.toml default; ChatGPT plan credits. Flash models + variant low keep costs down",
+      "rates_per_m": { "input": 0.15, "output": 0.6 }
+    },
+    "opencode": {
+      "model": "openrouter/google/gemini-3.5-flash-lite",
+      "variant": null,
+      "note": "needs OPENROUTER_API_KEY",
+      "rates_per_m": { "input": 0.05, "output": 0.2 }
+    },
+    "kimi": {
+      "model": null,
+      "variant": null,
+      "note": "Moderato plan default; usage events not exposed by -p mode",
+      "rates_per_m": { "input": 0.6, "output": 2.5 }
+    },
+    "grok": {
+      "model": null,
+      "variant": null,
+      "note": "default model; end event reports native cost",
+      "rates_per_m": { "input": 0.2, "output": 0.5 }
+    },
+    "agy": {
+      "model": null,
+      "variant": null,
+      "note": "Antigravity OAuth; no per-run usage surfaced",
+      "rates_per_m": null
+    }
+  }
+}
