@@ -41,6 +41,16 @@ each Dependabot branch one by one.
   autoformatter changes dozens of files, revert it and narrow the fix.
 - If any PR changes application code, migrations, Docker files, or config that
   is not clearly dependency metadata, stop and do a normal PR review instead.
+- Close the loop on every PR you do NOT consolidate. "Defer", "escalate to
+  `pr-audit`", or "decline" is a disposition, not a resting state: before you
+  finish, leave that PR in a clean, self-explaining state on the forge — post a
+  comment stating why it was not merged (major bump, failing build, non-metadata
+  changes, suspicious source) and then either **close it** or **open a tracking
+  issue** for the deferred work and link it. Never leave a rejected or deferred
+  bump silently open with a red build. Mentioning it only in your final summary
+  is not resolving it — a reader of the PR list must see the decision there. A
+  deferred major bump handed to `pr-audit` must carry that concrete disposition,
+  not just a note.
 - Supply-chain floor: before running the update, verify each bumped
   dependency resolves from the default public registry (rubygems.org, npm,
   pypi) with the expected name, version, and checksums. Treat git/path
@@ -228,7 +238,10 @@ Report concisely:
 - GitHub CI result
 - deploy result and service health
 - PRs intentionally not consolidated, and why (suspicious source, major
-  bump, failing tests, non-dependency files)
+  bump, failing tests, non-dependency files) — and the concrete state each was
+  left in: commented + closed, or commented + tracked in issue #N. Every
+  not-consolidated PR must already be in one of those states before you report,
+  never just described here while still open.
 - any remaining local uncommitted changes intentionally left alone
 
 Example final note:
