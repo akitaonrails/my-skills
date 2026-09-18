@@ -183,7 +183,33 @@ Use synthetic data. A security regression test must fail before the fix and
 pass after it when feasible, plus include a legitimate control case so a blanket
 deny is not mistaken for correct authorization.
 
-## Phase 5: Findings and Fixes
+## Phase 5: Adversarial Verification
+
+Every candidate finding is verified before it enters the report, and the
+verifier is never the reasoning that produced it:
+
+- With sub-agents available, spawn a fresh verifier per candidate whose only
+  job is to REFUTE it: hand over the finding, the exact code evidence, and
+  minimal context — not your reasoning, which anchors the reviewer. The
+  verifier re-derives the exploit path from source and reports whether it
+  holds, with its own evidence.
+- Single-agent: re-derive each candidate from the source from scratch,
+  actively trying to disprove it — check whether an upstream validation,
+  permission, or typed boundary already blocks the path you traced.
+- Survives → `confirmed`. Cannot be completed (missing environment, unread
+  dependency, unreachable runtime) → `needs-validation`, below. Disproven →
+  dropped from findings, but recorded as a one-line rejected candidate
+  (claim + disproof) so the false positive stays visible and is not re-found
+  next run.
+
+`needs-validation` discipline: an unresolved lead is never reported as a
+finding and never carries a severity. It records the exact unresolved fact —
+what is missing, why it could not be established, and what would resolve it —
+plus a safe plan to establish it if the environment becomes available.
+Inflating an unresolved lead into a finding, or quietly dropping it, are the
+two failure modes this section exists to prevent.
+
+## Phase 6: Findings and Fixes
 
 Each finding must include:
 
@@ -209,7 +235,10 @@ Severity:
 - `Informational`: evidence-backed observation, not a vulnerability.
 
 Do not inflate severity from scary input alone. Do not minimize because a path
-is "internal" without proving the trust boundary.
+is "internal" without proving the trust boundary. A gap already covered by
+another enforced layer is hardening, not a vulnerability: if Layer A
+demonstrably blocks the attack, the absence of Layer B is an
+`Informational`/`Low` note unless Layer A's coverage is itself incomplete.
 
 Fix confirmed findings one coherent boundary at a time. Add regression tests,
 run focused gates during iteration and the full trusted gate once on the final
@@ -238,7 +267,15 @@ Automated evidence: <tools/results/config caveats>
 - Disclosure/rollout:
 
 ### Reviewed boundaries with no finding
-- <boundary and evidence>
+- <boundary — concrete evidence: paths/components examined, checks run, result.
+  A bare "auth reviewed" claim is not coverage evidence.>
+
+### Needs validation
+- <exact unresolved fact, why it is unresolved, what would resolve it —
+  no severity>
+
+### Rejected candidates
+- <claim — one-line disproof>
 
 ### Residual risk and untested scope
 - <environment, platform, dynamic or penetration-test gap>
@@ -246,3 +283,8 @@ Automated evidence: <tools/results/config caveats>
 
 If no findings remain, say "no substantiated findings in the audited scope" -
 not "secure" or "guaranteed clean."
+
+Verification model (adversarial verification, needs-validation discipline,
+coverage honesty) adapted from ideas in
+[cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)
+(MIT).
