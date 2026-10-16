@@ -171,6 +171,12 @@ the recorded evidence specific but concise enough for the API to accept it.
   it safe>"`. CodeQL's reason values contain spaces and punctuation; do not use
   the underscore spellings accepted by other alert APIs. A
   dismissal must cite the boundary that makes it safe, never convenience.
+  Before adding an inline `lgtm[...]` or `codeql[...]` suppression, verify that
+  the current language pack implements CodeQL alert suppression and prove it in
+  a PR scan. Do not copy suppression syntax from another language. The Rust pack
+  did not implement the shared `AlertSuppression` module when this guidance was
+  written, so those comments were inert and merely changed alert fingerprints;
+  for an unsupported pack, record the API dismissal and leave source unchanged.
 
 Record every resolution/dismissal, with its reason, in the audit output — a
 dismissed alert is a finding you took responsibility for, not one that vanished.
