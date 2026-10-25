@@ -178,7 +178,8 @@ def build_command(harness: str, model: str | None, variant: str | None,
         return _bash_login(cmd), prompt
 
     if harness == "opencode":
-        cmd = ["opencode", "run", "--format", "json", "--dir", str(cwd)]
+        # opencode >=2.x rejects --dir; Popen already sets cwd=str(cwd) below.
+        cmd = ["opencode", "run", "--format", "json"]
         if model:
             cmd += ["-m", model]
         if variant:
@@ -327,6 +328,13 @@ def parse_opencode(lines: list[str]) -> dict:
                          if p.get("type") == "text"]
                 if texts:
                     chunks.append("\n".join(texts))
+        elif t == "text":
+            # opencode v2 emits assistant text as top-level `text` events
+            # (part.text) instead of the v1 `message` envelope.
+            part = ev.get("part") or {}
+            txt = part.get("text") or ""
+            if txt.strip():
+                chunks.append(txt)
         elif t == "step_finish":
             out["session_id"] = ev.get("sessionID") or out["session_id"]
             part = ev.get("part") or {}
