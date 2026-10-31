@@ -130,6 +130,19 @@ Inspect every hunk. Explicitly review:
 - tests and docs too. A malicious payload can live in a test runner, doctest,
   fixture generator, example, benchmark, migration, or install snippet.
 
+### Binary artifacts in the diff
+
+A PR that adds or modifies a compiled or native artifact (binary blob,
+prebuilt native module, minified bundle without source, vendored `.exe`/
+`.dll`/`.so`/`.node`) is a primary supply-chain vector. The artifact is
+untrusted until triaged: apply the binary triage protocol from
+`$security-audit` ("Compiled and native artifacts" — imports as a capability
+map, strings in both encodings, near-empty strings view = obfuscation). A
+binary with no corresponding source or build provenance in the PR is
+`[BLOCKING]` until triaged clean; "the build produced it" counts as
+provenance only if the workflow that built it is itself trusted, pinned, and
+unmodified by this PR.
+
 ### Supply-chain and CI checks
 
 - Identify every new or changed direct and transitive dependency. Check for
