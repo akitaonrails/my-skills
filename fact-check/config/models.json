@@ -1,6 +1,6 @@
 {
-  "_comment": "Two-pass fact-check: pass 1 = default_harness (grok, cheap), fixes land, pass 2 = second_pass_harness (claude) on the fixed article. 'model: null' means use the harness's own configured default. Override per run with --model/--variant. Rates are approximate list prices (USD per 1M tokens) for cost awareness only.",
-  "default_harness": "grok",
+  "_comment": "Two-pass fact-check: pass 1 = default_harness (claude), fixes land, pass 2 = second_pass_harness (claude) on the fixed article. Kimi is an allowed override when its local adapter is compatible. Never default to Grok. 'model: null' means use the harness's own configured default. Override per run with --model/--variant. Rates are approximate list prices (USD per 1M tokens) for cost awareness only.",
+  "default_harness": "claude",
   "harnesses": {
     "zcode": {
       "model": "zai/glm-5.3-flash",

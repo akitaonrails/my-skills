@@ -41,7 +41,7 @@ unsupported assertions, contradictions, and arguments that assume too much.
 ```
 Phase 0  Setup: locate file(s), choose harnesses (pass 1 + pass 2, config/models.json)
 Phase 1  Extract: read article, build claims.json + argument map
-Phase 2  PASS 1: scripts/fanout.py with the first harness (default: grok)
+Phase 2  PASS 1: scripts/fanout.py with the first harness (default: claude)
 Phase 3  Audit: your own hostile logic/consistency pass (no web)
 Phase 4  Report pass 1: auto-fix everything that does not touch the
          conclusions (humanizer on changed prose for blog posts); only deal
@@ -66,9 +66,10 @@ fixed sentences change the quoted text the checkers verify.
   spot-check the EN translation for claim drift (a claim changed in
   translation is a finding).
 - Pick the harnesses: pass 1 defaults to `config/models.json`
-  `default_harness` (currently `grok`, default model, cheap per check); pass 2
-  defaults to `second_pass_harness` (currently `claude`, session default
-  covered by the Max subscription). Override per run with `--harness`/
+  `default_harness` (currently `claude`, session default covered by the Max
+  subscription); pass 2 defaults to `second_pass_harness` (currently `claude`).
+  Kimi is an allowed override when its local adapter is compatible. Never use
+  Grok as an automatic default. Override per run with `--harness`/
   `--model`/`--variant` when the user asks for specific harnesses or the
   defaults are unavailable (check auth first: `references/harness-setup.md`).
   Harness auth/setup: `references/harness-setup.md`.
@@ -102,7 +103,7 @@ python3 <skill-dir>/scripts/fanout.py \
   --claims /tmp/fact-check/<run>/claims.json \
   --out-dir /tmp/fact-check/<run>/pass1 \
   --title "Article title" --lang pt-BR \
-  --harness grok --batch-size 6 --parallel 3
+  --harness claude --batch-size 6 --parallel 3
 ```
 
 - Do a `--dry-run` first to sanity-check batching.
