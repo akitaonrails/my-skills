@@ -75,6 +75,38 @@ diff, and tree-mode review. Locate binaries, symlinks, executable changes,
 Unicode controls, obfuscation/encoding, generated/minified code, package/build
 manifests, lockfiles, CI, install/release/deploy scripts, and vendored code.
 
+### Compiled and native artifacts
+
+When the scope includes committed binaries, prebuilt native modules,
+installers, or vendored blobs (supply-chain and malicious-code review), apply
+a binary triage protocol before trusting any scanner:
+
+- **Imports are a capability map.** Resolve the import table and map API
+  families to behavior: process creation (`CreateProcess`, `WinExec`,
+  `ShellExecute`), registry persistence (`RegCreateKeyEx`/`RegSetValueEx`,
+  Run keys), network/C2 (`WSAStartup`, `socket`, `InternetOpen*`,
+  `URLDownloadToFile`), code injection/unpacking (`VirtualAlloc`,
+  `VirtualProtect`, `WriteProcessMemory`, `CreateRemoteThread`), and runtime
+  dynamic linking (`LoadLibrary` + `GetProcAddress`) — the last is an
+  evasion signal when the resolved names are absent from the import table
+  but invoked through decode-at-startup stubs.
+- **Strings in both encodings.** Scan for narrow (ASCII/ANSI) and wide
+  (UTF-16LE, the Windows-native format) strings; a pass that skips UTF-16
+  misses half the evidence in Windows artifacts.
+- **Missing strings are a finding.** A compiled binary normally has hundreds
+  of legible strings; a near-empty strings view indicates obfuscation — look
+  for XOR/ADD/SUB decode loops and per-use decryption of API or URL names.
+- **Dynamic analysis only in a purpose-built analysis VM** with simulated
+  networking (FLARE-VM/FakeNet pattern) so C2 behavior is observed safely;
+  never execute a suspicious artifact on the host or a normal dev box.
+- Scanners and decompilers approximate; decompiler output is a hypothesis,
+  not source. A clean scan of a binary is not a verdict — report exactly
+  what was established (imports, strings, static structure) and what was not
+  (behavior, unpacked payloads). Definitive claims about a malicious artifact
+  require actual reverse engineering; say so when it was not done.
+
+(Method adapted from FLARE's Malware Analysis Crash Course.)
+
 Map each untrusted input to validation/normalization, authorization, side
 effects, persistence, response/logging, and cleanup. Map every privileged sink
 back to all callers.
